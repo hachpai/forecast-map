@@ -4,7 +4,6 @@ npm install --save-dev electron-rebuild
 npm install in repository
 */
 const electron = require('electron')
-var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 const fetch = require('electron-fetch');
 // Module to control application life.
@@ -57,6 +56,30 @@ var processWeatherData = function(lat,lon){
   .then((out) => {
     console.log('Checkout this JSON! ', out);
     console.log('Wind speed: ', out.wind.speed);
+    console.log('clouds:',out.clouds.all);
+    console.log('weather:',out.weather[0].main);
+    console.log('Temperature:',out.main.temp);
+
+    client.send('/composition/video/effect1/opacity/values', 0.5, function () {
+      //client.kill();
+    });
+    switch (out.weather[0].main)
+    {
+      case "Clear":
+        client.send('/layer1/clip2/connect',1);
+      break;
+      case "Rain":
+       client.send('/layer1/clip3/connect',1);
+       console.log('Rain:', out.rain["3h"]);
+      // client.send('/layer1/clip3/connect',1);
+      break;
+      case "Clouds":
+      //for clouds intensity
+
+      break;
+      default:
+    }
+
   }).catch(err => console.error(err));
 }
 function createWindow () {
@@ -108,12 +131,14 @@ app.on('activate', function () {
 ipcMain.on('user-data', function(event, arg) {
   console.log('Latitude:'+arg['lat']+', longitude:'+arg['lng']);
   processWeatherData(arg['lat'],arg['lng']);
-  client.send('/composition/video/effect1/opacity/values', 0.5, function () {
-    //client.kill();
-  });
   //console.log("wind speed:"+weather_json.wind.speed);
   //do child process or other data manipulation and name it manData
   //event.sender.send(‘manipulatedData’, manData);
 });
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+//miscelaneous functions
+function map_range(value, low1, high1, low2, high2) {
+    return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
+}
